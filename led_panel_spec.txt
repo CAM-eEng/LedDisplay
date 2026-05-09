@@ -1,37 +1,6 @@
 Specification
-Module Back View
-Resolution: 64(H)×128(W)
-Pitch: 2.5mm
-Density: 163840 pixels/m²
-LED Arrangement: SMD 1516
-Driver Mode: 16 scan
-Size: 320mm×160mm
-Mask: No mask
-Electricity Parameter:
-Optical Ratings
-Brightness: ≥5000cd/m²
-View Angle: 160 degree ( horizontal) 160 degree(vertical)
-View Distance: 2.5m-300m
-Gray Scale: 8bits input, correction with 16bits
-Display Color: 16.7M
-Brightness Adjustment: 100 levels
-Power Supply
-Operation Power: AC100-240V 50-60HZ Switch-able, Working voltage: DC-5V.
-Maxim Power Consumption: 900 w/m²
-Average Power Consumption: 360 w/m²
-Control System: Correction Scale Level 16bits
-Frame Update Frequency: 60Hz
-Screen Refresh Frequency: 1920Hz
-Gamma Correction: -5.0—5.0
-Support Input: Composite Video, S-Video, DVI, HDMI., SDI, HD_SDI
-Control Distance: Ethernet cable 100m, optical fiber 5km
-Support VGA Mode: 1024×768,1280×1024,1600×1200,1920×1080
-Color Temperature: 5000-9300 adjustable
-Brightness Correction: dot by dot, module by module, cabinet by cabinet
-Reliability: Operating Temp.: -20℃ - +60℃ Celsius degree
-Operating Humidity: 10-95% RH
-Operating Life: 100,000 hours
-MTBF: 5000 hours
-Continuous Working Time: ≥72 hours
-Protection Level: Front side IP65, Backside IP43
-Out of Control Pixel Rate: 0.01%
+Resolution: 64(H)×64(W)
+Pitch: 3mm
+Size: 192mm × 192mm
+Addressing: 5-pin (A, B, C, D, E)
+Scan: 1/32

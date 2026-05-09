@@ -11,14 +11,13 @@ MATRIX_WIDTH = 64
 MATRIX_HEIGHT = 64
 BIT_DEPTH = 4
 CHAR_WIDTH = 6
-TILE_ROWS = 2
 RESYNC_SECONDS = 3600
 
 matrix = Matrix(
     width=MATRIX_WIDTH,
     height=MATRIX_HEIGHT,
     bit_depth=BIT_DEPTH,
-    tile_rows=TILE_ROWS,
+    tile_rows=1,
     serpentine=False,
 )
 display = matrix.display

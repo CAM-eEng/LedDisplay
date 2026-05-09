@@ -57,11 +57,10 @@ add_label("BL", 4, HEIGHT - 6, 0x0000FF)
 add_label("BR", WIDTH - 4 - len("BR") * CHAR_WIDTH, HEIGHT - 6, 0xFFFF00)
 
 addrs = "4" if FORCE_4_ADDR_PINS else "auto"
-cfg = "{}x{} t={} s={} a={}".format(
-    WIDTH, HEIGHT, TILE_ROWS, "T" if SERPENTINE else "F", addrs
-)
-cfg_x = (WIDTH - len(cfg) * CHAR_WIDTH) // 2
-add_label(cfg, cfg_x, HEIGHT // 2, 0xFFFFFF)
+line1 = "{}x{} t={}".format(WIDTH, HEIGHT, TILE_ROWS)
+line2 = "s={} a={}".format("T" if SERPENTINE else "F", addrs)
+add_label(line1, (WIDTH - len(line1) * CHAR_WIDTH) // 2, HEIGHT // 2 - 4, 0xFFFFFF)
+add_label(line2, (WIDTH - len(line2) * CHAR_WIDTH) // 2, HEIGHT // 2 + 4, 0xFFFFFF)
 
 display.root_group = group
 

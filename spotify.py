@@ -16,13 +16,10 @@ def marquee_window(text, offset, window=6, gap="   "):
     """
     if not text:
         return ""
+    if len(text) <= window:
+        return text
     padded = text + gap
     n = len(padded)
-    # If text is short enough to fit in the window and padded text is long enough,
-    # the text won't need scrolling to fill the window
-    if len(text) <= window and n >= window:
-        return text
-    # Scrolling is needed: use the wrapping logic
     o = offset % n
     if o + window <= n:
         return padded[o:o + window]
@@ -267,6 +264,9 @@ def _log_not_configured_once():
         _state["logged_not_configured"] = True
 
 
+_RETRY_AFTER_REFRESH = object()  # sentinel for 401 path
+
+
 def fetch(pool):
     """Fetch the currently-playing track. Returns parse_now_playing() result or None."""
     if not _is_configured():
@@ -290,9 +290,6 @@ def fetch(pool):
         if payload is _RETRY_AFTER_REFRESH:
             return None
     return parse_now_playing(payload) if payload else None
-
-
-_RETRY_AFTER_REFRESH = object()  # sentinel for 401 path
 
 
 def _request_currently_playing(pool):

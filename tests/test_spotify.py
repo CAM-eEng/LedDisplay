@@ -39,9 +39,19 @@ def test_custom_window_size():
 
 
 def test_custom_gap():
-    # Gap is "*" — padded = "AB*" length 3; offset 0 returns first 4 chars
-    # wrapping: "AB*A"
-    assert marquee_window("AB", 0, window=4, gap="*") == "AB*A"
+    # Gap is "*" — padded = "ABCDE*" length 6; offset 0 returns first 4 chars
+    # of padded: "ABCD". At offset 2: "CDE*". At offset 4: "E*AB" (wraps).
+    assert marquee_window("ABCDE", 0, window=4, gap="*") == "ABCD"
+    assert marquee_window("ABCDE", 2, window=4, gap="*") == "CDE*"
+    assert marquee_window("ABCDE", 4, window=4, gap="*") == "E*AB"
+
+
+def test_short_string_with_short_gap_still_does_not_scroll():
+    # Regression guard: "U2" + default gap "   " = 5 chars, less than window=6.
+    # Despite padded being shorter than window, len(text) <= window so we don't scroll.
+    assert marquee_window("U2", 0) == "U2"
+    assert marquee_window("U2", 42) == "U2"
+    assert marquee_window("OK", 0) == "OK"
 
 
 def _track_payload(name="Bohemian Rhapsody", artists=("Queen",), is_playing=True):

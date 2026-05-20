@@ -46,3 +46,19 @@ def is_dst(utc_struct_time, tz_name):
     start = (3, start_day, start_hour_utc, 0)
     end = (11, end_day, end_hour_utc, 0)
     return start <= cur < end
+
+
+def zone_offset(utc_struct_time, tz_name):
+    """Return the local UTC offset in hours for tz_name at the given UTC time."""
+    if tz_name not in _ZONES:
+        return 0
+    std, dst, _, _ = _ZONES[tz_name]
+    return dst if is_dst(utc_struct_time, tz_name) else std
+
+
+def zone_abbrev(utc_struct_time, tz_name):
+    """Return the zone abbreviation (e.g., "PST"/"PDT") for tz_name at the given UTC time."""
+    if tz_name not in _ZONES:
+        return "UTC"
+    _, _, std_abbr, dst_abbr = _ZONES[tz_name]
+    return dst_abbr if is_dst(utc_struct_time, tz_name) else std_abbr

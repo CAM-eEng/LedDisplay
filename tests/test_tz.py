@@ -99,3 +99,35 @@ def test_is_dst_eastern_time_boundary_differs_from_pacific():
     # Same instant in Pacific = 23:00 UTC March 7 = still PST
     assert tz.is_dst(_utc(2026, 3, 8, 7, 0), "America/New_York") is True
     assert tz.is_dst(_utc(2026, 3, 8, 7, 0), "America/Los_Angeles") is False
+
+
+def test_zone_offset_pacific_winter():
+    assert tz.zone_offset(_utc(2026, 1, 15), "America/Los_Angeles") == -8
+
+
+def test_zone_offset_pacific_summer():
+    assert tz.zone_offset(_utc(2026, 7, 4), "America/Los_Angeles") == -7
+
+
+def test_zone_offset_eastern_winter():
+    assert tz.zone_offset(_utc(2026, 1, 15), "America/New_York") == -5
+
+
+def test_zone_offset_unknown_zone_returns_zero():
+    assert tz.zone_offset(_utc(2026, 7, 4), "Mars/Olympus") == 0
+
+
+def test_zone_abbrev_pacific_winter():
+    assert tz.zone_abbrev(_utc(2026, 1, 15), "America/Los_Angeles") == "PST"
+
+
+def test_zone_abbrev_pacific_summer():
+    assert tz.zone_abbrev(_utc(2026, 7, 4), "America/Los_Angeles") == "PDT"
+
+
+def test_zone_abbrev_eastern_summer():
+    assert tz.zone_abbrev(_utc(2026, 7, 4), "America/New_York") == "EDT"
+
+
+def test_zone_abbrev_unknown_zone_returns_utc():
+    assert tz.zone_abbrev(_utc(2026, 7, 4), "Mars/Olympus") == "UTC"

@@ -248,3 +248,81 @@ def _refresh_access_token(pool):
     expires_in = int(token_data.get("expires_in", 3600))
     _state["expires_at"] = _time.monotonic() + expires_in - 60
     return True
+
+
+_CURRENTLY_PLAYING_URL = "https://api.spotify.com/v1/me/player/currently-playing"
+
+
+def _is_configured():
+    return bool(
+        _state["client_id"]
+        and _state["client_secret"]
+        and _state["refresh_token"]
+    )
+
+
+def _log_not_configured_once():
+    if not _state["logged_not_configured"]:
+        print("spotify: not configured, feature disabled")
+        _state["logged_not_configured"] = True
+
+
+def fetch(pool):
+    """Fetch the currently-playing track. Returns parse_now_playing() result or None."""
+    if not _is_configured():
+        _log_not_configured_once()
+        return None
+    if _state["auth_failed"]:
+        return None
+
+    if (
+        _state["access_token"] is None
+        or _time.monotonic() >= _state["expires_at"]
+    ):
+        if not _refresh_access_token(pool):
+            return None
+
+    payload = _request_currently_playing(pool)
+    if payload is _RETRY_AFTER_REFRESH:
+        if not _refresh_access_token(pool):
+            return None
+        payload = _request_currently_playing(pool)
+        if payload is _RETRY_AFTER_REFRESH:
+            return None
+    return parse_now_playing(payload) if payload else None
+
+
+_RETRY_AFTER_REFRESH = object()  # sentinel for 401 path
+
+
+def _request_currently_playing(pool):
+    """Make the GET request. Returns:
+      - dict payload on 200
+      - None on 204, 429, network error, or non-recoverable HTTP
+      - _RETRY_AFTER_REFRESH sentinel on 401 (caller should re-refresh and retry once)
+    """
+    session = _ensure_session(pool)
+    headers = {"Authorization": "Bearer " + _state["access_token"]}
+    try:
+        resp = session.get(_CURRENTLY_PLAYING_URL, headers=headers)
+    except Exception as e:
+        print("spotify: currently-playing request failed:", e)
+        return None
+    try:
+        if resp.status_code == 204:
+            return None
+        if resp.status_code == 401:
+            return _RETRY_AFTER_REFRESH
+        if resp.status_code == 429:
+            print("spotify: rate limited (429)")
+            return None
+        if resp.status_code != 200:
+            print("spotify: currently-playing HTTP", resp.status_code)
+            return None
+        try:
+            return resp.json()
+        except Exception as e:
+            print("spotify: currently-playing JSON parse failed:", e)
+            return None
+    finally:
+        resp.close()

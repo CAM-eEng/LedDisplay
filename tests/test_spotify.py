@@ -1,4 +1,4 @@
-from spotify import marquee_window
+from spotify import marquee_window, parse_now_playing
 
 
 def test_empty_string_returns_empty():
@@ -42,3 +42,110 @@ def test_custom_gap():
     # Gap is "*" — padded = "AB*" length 3; offset 0 returns first 4 chars
     # wrapping: "AB*A"
     assert marquee_window("AB", 0, window=4, gap="*") == "AB*A"
+
+
+def _track_payload(name="Bohemian Rhapsody", artists=("Queen",), is_playing=True):
+    return {
+        "is_playing": is_playing,
+        "currently_playing_type": "track",
+        "item": {
+            "name": name,
+            "artists": [{"name": a} for a in artists],
+        },
+    }
+
+
+def _episode_payload(name="Hard Fork", show="The New York Times", is_playing=True):
+    return {
+        "is_playing": is_playing,
+        "currently_playing_type": "episode",
+        "item": {
+            "name": name,
+            "show": {"name": show},
+        },
+    }
+
+
+def test_parse_returns_none_for_empty_payload():
+    assert parse_now_playing({}) is None
+
+
+def test_parse_returns_none_for_none_payload():
+    assert parse_now_playing(None) is None
+
+
+def test_parse_returns_none_when_item_missing():
+    assert parse_now_playing({"is_playing": True}) is None
+
+
+def test_parse_track_returns_track_artist_is_playing():
+    data = parse_now_playing(_track_payload())
+    assert data == {
+        "track": "Bohemian Rhapsody",
+        "artist": "Queen",
+        "is_playing": True,
+    }
+
+
+def test_parse_paused_track_preserves_is_playing_false():
+    data = parse_now_playing(_track_payload(is_playing=False))
+    assert data["is_playing"] is False
+
+
+def test_parse_multi_artist_joins_with_comma_space():
+    data = parse_now_playing(_track_payload(artists=("Daft Punk", "Pharrell Williams")))
+    assert data["artist"] == "Daft Punk, Pharrell Williams"
+
+
+def test_parse_episode_uses_show_name_as_artist():
+    data = parse_now_playing(_episode_payload())
+    assert data == {
+        "track": "Hard Fork",
+        "artist": "The New York Times",
+        "is_playing": True,
+    }
+
+
+def test_parse_ad_returns_none():
+    payload = {
+        "is_playing": True,
+        "currently_playing_type": "ad",
+        "item": None,
+    }
+    assert parse_now_playing(payload) is None
+
+
+def test_parse_unknown_type_returns_none():
+    payload = {
+        "is_playing": True,
+        "currently_playing_type": "unknown_thing",
+        "item": {"name": "x", "artists": [{"name": "y"}]},
+    }
+    assert parse_now_playing(payload) is None
+
+
+def test_parse_track_with_missing_name_returns_none():
+    payload = {
+        "is_playing": True,
+        "currently_playing_type": "track",
+        "item": {"artists": [{"name": "Queen"}]},
+    }
+    assert parse_now_playing(payload) is None
+
+
+def test_parse_track_with_no_artists_returns_none():
+    payload = {
+        "is_playing": True,
+        "currently_playing_type": "track",
+        "item": {"name": "x", "artists": []},
+    }
+    assert parse_now_playing(payload) is None
+
+
+def test_parse_episode_with_missing_show_returns_none():
+    payload = {
+        "is_playing": True,
+        "currently_playing_type": "episode",
+        "item": {"name": "x"},
+    }
+    assert parse_now_playing(payload) is None

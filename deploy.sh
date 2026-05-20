@@ -30,7 +30,7 @@ if [[ "$MODE" == "test" ]]; then
   cp "$SRC_DIR/test_panel.py" "$CIRCUITPY/code.py"
   echo "  + test_panel.py → code.py"
 else
-  for f in code.py clock.py wifi_setup.py; do
+  for f in code.py clock.py wifi_setup.py tz.py brightness.py weather.py sun.py logo.py; do
     src="$SRC_DIR/$f"
     if [[ ! -f "$src" ]]; then
       echo "  - $f missing in project, skipped"
@@ -38,6 +38,24 @@ else
     fi
     cp "$src" "$CIRCUITPY/$f"
     echo "  + $f"
+  done
+
+  mkdir -p "$CIRCUITPY/images/weather" "$CIRCUITPY/lib/fonts"
+  for icon in "$SRC_DIR"/images/weather/*.bmp; do
+    [[ -f "$icon" ]] || continue
+    cp "$icon" "$CIRCUITPY/images/weather/"
+    echo "  + images/weather/$(basename "$icon")"
+  done
+  if [[ -f "$SRC_DIR/images/arc_raiders.bmp" ]]; then
+    cp "$SRC_DIR/images/arc_raiders.bmp" "$CIRCUITPY/images/arc_raiders.bmp"
+    echo "  + images/arc_raiders.bmp"
+  else
+    echo "  - images/arc_raiders.bmp missing in project, skipped (logo quadrant will be blank)"
+  fi
+  for font in "$SRC_DIR"/lib/fonts/*.bdf; do
+    [[ -f "$font" ]] || continue
+    cp "$font" "$CIRCUITPY/lib/fonts/"
+    echo "  + lib/fonts/$(basename "$font")"
   done
 fi
 

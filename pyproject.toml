@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `code.py` (CircuitPython entry point) shadows the stdlib `code` module
+# that pytest's debugging plugin imports via pdb. Disable that plugin
+# since interactive debugging isn't part of this project's workflow.
+addopts = "-ra -q -p no:debugging"

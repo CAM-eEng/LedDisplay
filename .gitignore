@@ -4,4 +4,6 @@ __pycache__/
 *.pyc
 *.mpy
 .vscode/
-images/
+images/*
+!images/weather/
+!images/arc_raiders_logo/

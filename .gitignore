@@ -6,4 +6,4 @@ __pycache__/
 .vscode/
 images/*
 !images/weather/
-!images/weather/
+!images/arc_raiders_logo/

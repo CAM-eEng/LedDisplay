@@ -1,5 +1,9 @@
 """Spotify now-playing quadrant for the LED dashboard."""
 
+import os
+
+from brightness import scale
+
 
 def marquee_window(text, offset, window=6, gap="   "):
     """Return a `window`-character slice of `text + gap`, wrapping at the end.
@@ -61,3 +65,122 @@ def parse_now_playing(payload):
         "artist": artist,
         "is_playing": bool(payload.get("is_playing")),
     }
+
+
+_TRACK_COLOR = 0x1ED760    # Spotify green
+_ARTIST_COLOR = 0x999999   # Dim white
+_PAUSE_DIM = 0.4
+
+_state = {
+    "group": None,
+    "track_label": None,
+    "artist_label": None,
+    "font": None,              # lazily loaded in build()
+    "session": None,           # lazily created in fetch() (Task 5)
+    "access_token": None,
+    "expires_at": 0.0,
+    "refresh_token": os.getenv("SPOTIFY_REFRESH_TOKEN", ""),
+    "client_id": os.getenv("SPOTIFY_CLIENT_ID", ""),
+    "client_secret": os.getenv("SPOTIFY_CLIENT_SECRET", ""),
+    "auth_failed": False,
+    "logged_not_configured": False,
+    "track_text": "",
+    "artist_text": "",
+    "track_offset": 0,
+    "artist_offset": 0,
+    "is_playing": False,
+    "has_data": False,
+    "last_factor": 1.0,
+}
+
+
+def build(x, y, width, height):
+    """Create the Spotify quadrant displayio.Group (initially hidden)."""
+    import displayio
+    from adafruit_display_text.label import Label
+    from adafruit_bitmap_font import bitmap_font
+
+    if _state["font"] is None:
+        _state["font"] = bitmap_font.load_font("/lib/fonts/5x8.bdf")
+
+    group = displayio.Group(x=x, y=y)
+    track_label = Label(_state["font"], text="", color=_TRACK_COLOR)
+    track_label.x = 2
+    track_label.y = 8
+    artist_label = Label(_state["font"], text="", color=_ARTIST_COLOR)
+    artist_label.x = 2
+    artist_label.y = 20
+    group.append(track_label)
+    group.append(artist_label)
+    group.hidden = True
+
+    _state["group"] = group
+    _state["track_label"] = track_label
+    _state["artist_label"] = artist_label
+    return group
+
+
+def render(data):
+    """Update labels from a parse_now_playing() result (or None to clear)."""
+    if _state["track_label"] is None:
+        return
+    if data is None:
+        _state["has_data"] = False
+        _state["track_text"] = ""
+        _state["artist_text"] = ""
+        _state["track_label"].text = ""
+        _state["artist_label"].text = ""
+        _apply_label_brightness()
+        return
+
+    track = data["track"]
+    artist = data["artist"]
+    is_playing = bool(data["is_playing"])
+
+    if track != _state["track_text"] or artist != _state["artist_text"]:
+        _state["track_offset"] = 0
+        _state["artist_offset"] = 0
+    _state["track_text"] = track
+    _state["artist_text"] = artist
+    _state["is_playing"] = is_playing
+    _state["has_data"] = True
+
+    _state["track_label"].text = marquee_window(track, _state["track_offset"])
+    _state["artist_label"].text = marquee_window(artist, _state["artist_offset"])
+    _apply_label_brightness()
+
+
+def tick():
+    """Advance the marquee by one character. No-op when hidden or paused."""
+    if _state["group"] is None or _state["group"].hidden:
+        return
+    if not _state["has_data"] or not _state["is_playing"]:
+        return
+    _state["track_offset"] += 1
+    _state["artist_offset"] += 1
+    _state["track_label"].text = marquee_window(
+        _state["track_text"], _state["track_offset"]
+    )
+    _state["artist_label"].text = marquee_window(
+        _state["artist_text"], _state["artist_offset"]
+    )
+
+
+def apply_brightness(factor):
+    _state["last_factor"] = factor
+    _apply_label_brightness()
+
+
+def _apply_label_brightness():
+    if _state["track_label"] is None:
+        return
+    factor = _state["last_factor"]
+    paused = _state["has_data"] and not _state["is_playing"]
+    eff = factor * (_PAUSE_DIM if paused else 1.0)
+    _state["track_label"].color = scale(_TRACK_COLOR, eff)
+    _state["artist_label"].color = scale(_ARTIST_COLOR, eff)
+
+
+def set_hidden(hidden):
+    if _state["group"] is not None:
+        _state["group"].hidden = hidden

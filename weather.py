@@ -1,8 +1,5 @@
 """Open-Meteo weather fetch + quadrant rendering for the LED dashboard."""
 
-import os
-import time
-
 from brightness import scale
 
 
@@ -40,6 +37,7 @@ _state = {
     "base_palette": None,    # original RGB ints per palette index, for re-dimming
     "last_factor": 1.0,
     "font": None,            # lazily loaded in build()
+    "session": None,         # lazily created in fetch() and reused across calls
 }
 
 
@@ -111,10 +109,13 @@ def fetch(pool, lat, lon, tz_name):
         "sunset_minutes": int,
     }
     """
-    import ssl
-    import adafruit_requests
-
-    requests = adafruit_requests.Session(pool, ssl.create_default_context())
+    if _state["session"] is None:
+        import ssl
+        import adafruit_requests
+        _state["session"] = adafruit_requests.Session(
+            pool, ssl.create_default_context()
+        )
+    requests = _state["session"]
     url = (
         "https://api.open-meteo.com/v1/forecast"
         "?latitude={lat}&longitude={lon}"

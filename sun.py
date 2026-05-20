@@ -80,3 +80,8 @@ def apply_brightness(factor):
     if _state["header"] is not None:
         _state["header"].color = scale(_LABEL_COLOR, factor)
         _state["time_label"].color = scale(_TIME_COLOR, factor)
+
+
+def set_hidden(hidden):
+    if _state["group"] is not None:
+        _state["group"].hidden = hidden

@@ -1,6 +1,8 @@
 """Spotify now-playing quadrant for the LED dashboard."""
 
+import binascii
 import os
+import time as _time
 
 from brightness import scale
 
@@ -184,3 +186,65 @@ def _apply_label_brightness():
 def set_hidden(hidden):
     if _state["group"] is not None:
         _state["group"].hidden = hidden
+
+
+def _ensure_session(pool):
+    if _state["session"] is None:
+        import ssl
+        import adafruit_requests
+        _state["session"] = adafruit_requests.Session(
+            pool, ssl.create_default_context()
+        )
+    return _state["session"]
+
+
+def _refresh_access_token(pool):
+    """POST refresh_token grant to /api/token. Returns True on success.
+
+    On a 400 invalid_grant, latches _state["auth_failed"] = True so subsequent
+    polls do nothing until reboot + re-running scripts/spotify_auth.py.
+    """
+    session = _ensure_session(pool)
+    creds = "{}:{}".format(_state["client_id"], _state["client_secret"]).encode()
+    auth = binascii.b2a_base64(creds, newline=False).decode()
+    headers = {
+        "Authorization": "Basic " + auth,
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    body = "grant_type=refresh_token&refresh_token=" + _state["refresh_token"]
+    try:
+        resp = session.post(
+            "https://accounts.spotify.com/api/token",
+            data=body,
+            headers=headers,
+        )
+    except Exception as e:
+        print("spotify: token refresh request failed:", e)
+        return False
+    try:
+        if resp.status_code == 400:
+            _state["auth_failed"] = True
+            print(
+                "spotify: refresh token rejected — "
+                "run scripts/spotify_auth.py again"
+            )
+            return False
+        if resp.status_code != 200:
+            print("spotify: token refresh HTTP", resp.status_code)
+            return False
+        try:
+            token_data = resp.json()
+        except Exception as e:
+            print("spotify: token JSON parse failed:", e)
+            return False
+    finally:
+        resp.close()
+
+    access = token_data.get("access_token")
+    if not access:
+        print("spotify: no access_token in refresh response")
+        return False
+    _state["access_token"] = access
+    expires_in = int(token_data.get("expires_in", 3600))
+    _state["expires_at"] = _time.monotonic() + expires_in - 60
+    return True

@@ -18,3 +18,31 @@ def _nth_sunday_of_month(year, month, n):
     first_wd = _weekday(year, month, 1)
     days_to_first_sunday = (6 - first_wd) % 7
     return 1 + days_to_first_sunday + (n - 1) * 7
+
+
+# (std_offset_hours, dst_offset_hours, std_abbrev, dst_abbrev)
+_ZONES = {
+    "America/Los_Angeles": (-8, -7, "PST", "PDT"),
+    "America/Denver":      (-7, -6, "MST", "MDT"),
+    "America/Chicago":     (-6, -5, "CST", "CDT"),
+    "America/New_York":    (-5, -4, "EST", "EDT"),
+}
+
+
+def is_dst(utc_struct_time, tz_name):
+    """Return True if the given UTC time falls inside the US DST window for tz_name."""
+    if tz_name not in _ZONES:
+        return False
+    std, dst, _, _ = _ZONES[tz_name]
+    year = utc_struct_time.tm_year
+    start_day = _nth_sunday_of_month(year, 3, 2)   # 2nd Sun March
+    end_day = _nth_sunday_of_month(year, 11, 1)    # 1st Sun November
+    # DST begins at 02:00 LOCAL standard time = (-std + 2) UTC hours.
+    # DST ends at 02:00 LOCAL daylight time = (-dst + 2) UTC hours.
+    start_hour_utc = -std + 2
+    end_hour_utc = -dst + 2
+    cur = (utc_struct_time.tm_mon, utc_struct_time.tm_mday,
+           utc_struct_time.tm_hour, utc_struct_time.tm_min)
+    start = (3, start_day, start_hour_utc, 0)
+    end = (11, end_day, end_hour_utc, 0)
+    return start <= cur < end

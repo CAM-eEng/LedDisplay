@@ -9,6 +9,7 @@ LIBS=(
   adafruit_display_text
   adafruit_bitmap_font
   adafruit_display_shapes
+  adafruit_imageload
   adafruit_minimqtt
   adafruit_io
   adafruit_esp32spi

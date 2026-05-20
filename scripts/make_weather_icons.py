@@ -80,7 +80,11 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     for name, gen in GENERATORS.items():
         path = os.path.join(OUT_DIR, name + ".bmp")
-        gen().save(path, "BMP")
+        # Indexed-palette mode is what displayio/adafruit_imageload expect for
+        # palette-based brightness dimming. RGB BMPs are loaded as ColorConverter
+        # objects with no enumerable palette, which breaks apply_brightness.
+        indexed = gen().convert("P", palette=Image.ADAPTIVE, colors=16)
+        indexed.save(path, "BMP")
         print("wrote", path)
 
 

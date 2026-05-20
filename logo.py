@@ -11,7 +11,7 @@ _state = {
 }
 
 
-def build(x, y, width, height, path="/images/arc_raiders.bmp"):
+def build(x, y, width, height, path="/images/arc_raiders_logo/logo32.bmp"):
     """Load the logo BMP and return a positioned displayio.Group.
 
     If the file is missing, returns an empty group (logo quadrant stays blank)

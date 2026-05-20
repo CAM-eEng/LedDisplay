@@ -46,11 +46,15 @@ else
     cp "$icon" "$CIRCUITPY/images/weather/"
     echo "  + images/weather/$(basename "$icon")"
   done
-  if [[ -f "$SRC_DIR/images/arc_raiders.bmp" ]]; then
-    cp "$SRC_DIR/images/arc_raiders.bmp" "$CIRCUITPY/images/arc_raiders.bmp"
-    echo "  + images/arc_raiders.bmp"
+  if [[ -d "$SRC_DIR/images/arc_raiders_logo" ]]; then
+    mkdir -p "$CIRCUITPY/images/arc_raiders_logo"
+    for f in "$SRC_DIR"/images/arc_raiders_logo/*.bmp; do
+      [[ -f "$f" ]] || continue
+      cp "$f" "$CIRCUITPY/images/arc_raiders_logo/"
+      echo "  + images/arc_raiders_logo/$(basename "$f")"
+    done
   else
-    echo "  - images/arc_raiders.bmp missing in project, skipped (logo quadrant will be blank)"
+    echo "  - images/arc_raiders_logo/ missing in project, skipped (logo quadrant will be blank)"
   fi
   for font in "$SRC_DIR"/lib/fonts/*.bdf; do
     [[ -f "$font" ]] || continue

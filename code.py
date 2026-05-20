@@ -18,6 +18,7 @@ import clock
 import weather
 import sun
 import logo
+import spotify
 from brightness import Brightness
 
 
@@ -31,6 +32,7 @@ _TZ_NAME = os.getenv("TZ_NAME", "UTC")
 _WEATHER_REFRESH_SEC = int(os.getenv("WEATHER_REFRESH_MIN", "15")) * 60
 _NTP_RESYNC_SEC = 3600
 _BRIGHTNESS_DEFAULT = int(os.getenv("BRIGHTNESS_DEFAULT", "3"))
+_SPOTIFY_REFRESH_SEC = int(os.getenv("SPOTIFY_REFRESH_SEC", "10"))
 
 
 matrix = Matrix(
@@ -47,15 +49,17 @@ clock_group = clock.build(0, 0, 32, 32)
 weather_group = weather.build(32, 0, 32, 32)
 sun_group = sun.build(0, 32, 32, 32)
 logo_group = logo.build(32, 32, 32, 32)
+spotify_group = spotify.build(0, 32, 32, 32)
 root.append(clock_group)
 root.append(weather_group)
 root.append(sun_group)
 root.append(logo_group)
+root.append(spotify_group)
 display.root_group = root
 
 brightness = Brightness(default_index=_BRIGHTNESS_DEFAULT)
 
-QUADRANTS = (clock, weather, sun, logo)
+QUADRANTS = (clock, weather, sun, logo, spotify)
 for q in QUADRANTS:
     q.apply_brightness(brightness.factor)
 
@@ -98,12 +102,31 @@ def _initial_weather(pool):
         return None, None
 
 
+def _apply_spotify_swap(data):
+    if data is None:
+        spotify.set_hidden(True)
+        sun.set_hidden(False)
+    else:
+        spotify.set_hidden(False)
+        sun.set_hidden(True)
+
+
+def _initial_spotify(pool):
+    try:
+        data = spotify.fetch(pool)
+        spotify.render(data)
+        _apply_spotify_swap(data)
+    except Exception as e:
+        print("spotify: initial fetch failed:", e)
+
+
 # Boot sequence
 clock.set_status("boot")
 pool = _connect_wifi()
 clock.set_status("ntp")
 _initial_ntp_sync(pool)
 sunrise_minutes, sunset_minutes = _initial_weather(pool)
+_initial_spotify(pool)
 
 # Re-apply brightness now that all quadrants have content
 for q in QUADRANTS:
@@ -112,6 +135,8 @@ for q in QUADRANTS:
 last_tick = 0.0
 last_weather = time.monotonic()
 last_ntp = time.monotonic()
+last_spotify = time.monotonic()
+last_marquee = time.monotonic()
 blink_on = True
 
 while True:
@@ -120,6 +145,10 @@ while True:
     if brightness.poll():
         for q in QUADRANTS:
             q.apply_brightness(brightness.factor)
+
+    if now - last_marquee >= 0.25:
+        spotify.tick()
+        last_marquee = now
 
     if now - last_tick >= 1.0:
         blink_on = not blink_on
@@ -137,6 +166,15 @@ while True:
         except Exception as e:
             print("weather: refresh failed:", e)
         last_weather = now
+
+    if now - last_spotify >= _SPOTIFY_REFRESH_SEC:
+        try:
+            data = spotify.fetch(pool)
+            spotify.render(data)
+            _apply_spotify_swap(data)
+        except Exception as e:
+            print("spotify: refresh failed:", e)
+        last_spotify = now
 
     if now - last_ntp >= _NTP_RESYNC_SEC:
         try:

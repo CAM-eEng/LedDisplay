@@ -4,15 +4,23 @@ import terminalio
 from adafruit_matrixportal.matrix import Matrix
 from adafruit_display_text.label import Label
 from adafruit_display_shapes.rect import Rect
+import os
+import layouts
 
-# === EDIT THESE TO TEST DIFFERENT CONFIGS ===
-WIDTH = 64
-HEIGHT = 64
+# Driver fields are sourced from layouts.py using LAYOUT_NAME from settings.toml.
+# Edit a layout entry in layouts.py to change defaults; override here for ad-hoc
+# diagnostics by reassigning WIDTH / HEIGHT / TILE_ROWS / SERPENTINE below.
 BIT_DEPTH = 4
-TILE_ROWS = 1
-SERPENTINE = True
 FORCE_4_ADDR_PINS = False
-# ============================================
+
+_layout = layouts.LAYOUTS.get(
+    os.getenv("LAYOUT_NAME", layouts.DEFAULT_LAYOUT),
+    layouts.LAYOUTS[layouts.DEFAULT_LAYOUT],
+)
+WIDTH = _layout["width"]
+HEIGHT = _layout["height"]
+TILE_ROWS = _layout["tile_rows"]
+SERPENTINE = _layout["serpentine"]
 
 addr_pins = None
 if FORCE_4_ADDR_PINS:

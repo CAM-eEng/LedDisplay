@@ -159,3 +159,24 @@ def test_parse_episode_with_missing_show_returns_none():
         "item": {"name": "x"},
     }
     assert parse_now_playing(payload) is None
+
+
+from spotify import _marquee_window_for
+
+
+def test_marquee_window_for_32px_returns_6():
+    assert _marquee_window_for(32) == 6
+
+
+def test_marquee_window_for_64px_returns_12():
+    assert _marquee_window_for(64) == 12
+
+
+def test_marquee_window_for_very_small_widths_returns_at_least_1():
+    assert _marquee_window_for(4) == 1
+    assert _marquee_window_for(0) == 1
+
+
+def test_marquee_window_for_128px_returns_25():
+    # 128 // 5 = 25
+    assert _marquee_window_for(128) == 25

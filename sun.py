@@ -21,7 +21,7 @@ def next_event(sunrise_minutes, sunset_minutes, now_minutes):
     return ("sunrise", sunrise_minutes)
 
 
-_LABEL_COLOR = 0x666666
+_LABEL_COLOR = 0xAAAAAA
 _TIME_COLOR = 0xFFCC44
 
 _state = {
@@ -30,6 +30,8 @@ _state = {
     "time_label": None,
     "last_factor": 1.0,
     "font": None,  # lazily loaded in build()
+    "width": 0,
+    "height": 0,
 }
 
 
@@ -54,6 +56,8 @@ def build(x, y, width, height):
     _state["group"] = group
     _state["header"] = header
     _state["time_label"] = time_label
+    _state["width"] = width
+    _state["height"] = height
     return group
 
 

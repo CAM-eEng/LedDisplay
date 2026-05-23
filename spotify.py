@@ -66,8 +66,18 @@ def parse_now_playing(payload):
     }
 
 
+def _marquee_window_for(width):
+    """Pick a marquee window size in characters for a quadrant of the given pixel width.
+
+    The 5x8 font is 5 px wide per character, so width // 5 maximizes legible
+    text while leaving the loop separator visible. Clamped to a minimum of 1
+    so degenerate widths don't produce a zero-length window.
+    """
+    return max(1, width // 5)
+
+
 _TRACK_COLOR = 0x1ED760    # Spotify green
-_ARTIST_COLOR = 0x999999   # Dim white
+_ARTIST_COLOR = 0xCCCCCC   # Dim white (survives 10% brightness floor)
 _PAUSE_DIM = 0.4
 
 _state = {
@@ -90,6 +100,8 @@ _state = {
     "is_playing": False,
     "has_data": False,
     "last_factor": 1.0,
+    "width": 0,
+    "marquee_window": 6,
 }
 
 
@@ -116,6 +128,8 @@ def build(x, y, width, height):
     _state["group"] = group
     _state["track_label"] = track_label
     _state["artist_label"] = artist_label
+    _state["width"] = width
+    _state["marquee_window"] = _marquee_window_for(width)
     return group
 
 
@@ -144,8 +158,12 @@ def render(data):
     _state["is_playing"] = is_playing
     _state["has_data"] = True
 
-    _state["track_label"].text = marquee_window(track, _state["track_offset"])
-    _state["artist_label"].text = marquee_window(artist, _state["artist_offset"])
+    _state["track_label"].text = marquee_window(
+        track, _state["track_offset"], window=_state["marquee_window"]
+    )
+    _state["artist_label"].text = marquee_window(
+        artist, _state["artist_offset"], window=_state["marquee_window"]
+    )
     _apply_label_brightness()
 
 
@@ -158,10 +176,10 @@ def tick():
     _state["track_offset"] += 1
     _state["artist_offset"] += 1
     _state["track_label"].text = marquee_window(
-        _state["track_text"], _state["track_offset"]
+        _state["track_text"], _state["track_offset"], window=_state["marquee_window"]
     )
     _state["artist_label"].text = marquee_window(
-        _state["artist_text"], _state["artist_offset"]
+        _state["artist_text"], _state["artist_offset"], window=_state["marquee_window"]
     )
 
 

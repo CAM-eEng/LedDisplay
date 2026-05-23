@@ -19,11 +19,10 @@ import weather
 import sun
 import logo
 import spotify
+import layouts
 from brightness import Brightness
 
 
-MATRIX_WIDTH = 64
-MATRIX_HEIGHT = 64
 BIT_DEPTH = 4
 
 _LAT = float(os.getenv("WEATHER_LAT", "47.6062"))
@@ -31,35 +30,56 @@ _LON = float(os.getenv("WEATHER_LON", "-122.3321"))
 _TZ_NAME = os.getenv("TZ_NAME", "UTC")
 _WEATHER_REFRESH_SEC = int(os.getenv("WEATHER_REFRESH_MIN", "15")) * 60
 _NTP_RESYNC_SEC = 3600
-_BRIGHTNESS_DEFAULT = int(os.getenv("BRIGHTNESS_DEFAULT", "3"))
+_BRIGHTNESS_DEFAULT = int(os.getenv("BRIGHTNESS_DEFAULT", "0"))
 _SPOTIFY_REFRESH_SEC = int(os.getenv("SPOTIFY_REFRESH_SEC", "10"))
 
 
+_MODULES = {
+    "clock": clock,
+    "weather": weather,
+    "sun": sun,
+    "logo": logo,
+    "spotify": spotify,
+}
+
+_layout_name = os.getenv("LAYOUT_NAME", layouts.DEFAULT_LAYOUT)
+_layout = layouts.LAYOUTS.get(_layout_name)
+if _layout is None:
+    print("layout: unknown LAYOUT_NAME", _layout_name,
+          "— falling back to", layouts.DEFAULT_LAYOUT)
+    _layout_name = layouts.DEFAULT_LAYOUT
+    _layout = layouts.LAYOUTS[_layout_name]
+print("layout:", _layout_name,
+      "(" + str(_layout["width"]) + "x" + str(_layout["height"]) + ",",
+      len(_layout["quadrants"]), "quadrants)")
+
 matrix = Matrix(
-    width=MATRIX_WIDTH,
-    height=MATRIX_HEIGHT,
+    width=_layout["width"],
+    height=_layout["height"],
     bit_depth=BIT_DEPTH,
-    tile_rows=1,
-    serpentine=False,
+    tile_rows=_layout["tile_rows"],
+    serpentine=_layout["serpentine"],
 )
 display = matrix.display
 
 root = displayio.Group()
-clock_group = clock.build(0, 0, 32, 32)
-weather_group = weather.build(32, 0, 32, 32)
-sun_group = sun.build(0, 32, 32, 32)
-logo_group = logo.build(32, 32, 32, 32)
-spotify_group = spotify.build(0, 32, 32, 32)
-root.append(clock_group)
-root.append(weather_group)
-root.append(sun_group)
-root.append(logo_group)
-root.append(spotify_group)
+_seen_modules = set()
+_ordered_quadrants = []
+for name, x, y, w, h in _layout["quadrants"]:
+    if name not in _MODULES:
+        print("layout: unknown module name", name, "— skipping")
+        continue
+    module = _MODULES[name]
+    group = module.build(x, y, w, h)
+    root.append(group)
+    if name not in _seen_modules:
+        _seen_modules.add(name)
+        _ordered_quadrants.append(module)
 display.root_group = root
 
 brightness = Brightness(default_index=_BRIGHTNESS_DEFAULT)
 
-QUADRANTS = (clock, weather, sun, logo, spotify)
+QUADRANTS = tuple(_ordered_quadrants)
 for q in QUADRANTS:
     q.apply_brightness(brightness.factor)
 

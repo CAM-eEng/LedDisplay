@@ -77,7 +77,7 @@ def _marquee_window_for(width):
 
 
 _TRACK_COLOR = 0x1ED760    # Spotify green
-_ARTIST_COLOR = 0x999999   # Dim white
+_ARTIST_COLOR = 0xCCCCCC   # Dim white (survives 10% brightness floor)
 _PAUSE_DIM = 0.4
 
 _state = {

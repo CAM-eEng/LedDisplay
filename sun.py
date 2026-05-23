@@ -21,7 +21,7 @@ def next_event(sunrise_minutes, sunset_minutes, now_minutes):
     return ("sunrise", sunrise_minutes)
 
 
-_LABEL_COLOR = 0x666666
+_LABEL_COLOR = 0xAAAAAA
 _TIME_COLOR = 0xFFCC44
 
 _state = {

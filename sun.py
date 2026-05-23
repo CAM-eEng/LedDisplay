@@ -30,6 +30,8 @@ _state = {
     "time_label": None,
     "last_factor": 1.0,
     "font": None,  # lazily loaded in build()
+    "width": 0,
+    "height": 0,
 }
 
 
@@ -54,6 +56,8 @@ def build(x, y, width, height):
     _state["group"] = group
     _state["header"] = header
     _state["time_label"] = time_label
+    _state["width"] = width
+    _state["height"] = height
     return group
 
 

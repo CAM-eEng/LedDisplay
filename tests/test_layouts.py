@@ -56,3 +56,12 @@ def test_64x64_layout_matches_today_behavior():
     assert layout["serpentine"] is False
     names = [q[0] for q in layout["quadrants"]]
     assert set(names) == {"clock", "weather", "sun", "logo", "spotify"}
+
+
+def test_spotify_renders_on_top_of_sun_in_every_layout_that_has_both():
+    for name, layout in layouts.LAYOUTS.items():
+        names = [q[0] for q in layout["quadrants"]]
+        if "sun" in names and "spotify" in names:
+            assert names.index("sun") < names.index("spotify"), (
+                "{}: spotify must appear after sun for correct z-order".format(name)
+            )

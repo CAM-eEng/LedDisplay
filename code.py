@@ -1,11 +1,8 @@
 """LED dashboard main entry point.
 
-Layout (64x64, four 32x32 quadrants):
-    +-----------+-----------+
-    | clock     | weather   |
-    +-----------+-----------+
-    | sun       | logo      |
-    +-----------+-----------+
+Composes quadrants into a displayio root based on the active layout
+selected via the LAYOUT_NAME setting. See layouts.py for the layout
+catalogue and quadrant rect definitions.
 """
 import os
 import time

@@ -19,7 +19,7 @@ LAYOUTS = {
             ("weather", 32,  0, 32, 32),
             ("sun",      0, 32, 32, 32),
             ("logo",    32, 32, 32, 32),
-            ("spotify",  0, 32, 32, 32),
+            ("spotify",  0, 32, 32, 32),  # same rect as sun; swapped via set_hidden
         ],
     },
     "128x64": {
@@ -32,7 +32,7 @@ LAYOUTS = {
             ("clock",   64,  0, 32, 32),
             ("weather", 96,  0, 32, 32),
             ("sun",     64, 32, 64, 32),
-            ("spotify", 64, 32, 64, 32),
+            ("spotify", 64, 32, 64, 32),  # same rect as sun; swapped via set_hidden
         ],
     },
 }

@@ -30,7 +30,7 @@ if [[ "$MODE" == "test" ]]; then
   cp "$SRC_DIR/test_panel.py" "$CIRCUITPY/code.py"
   echo "  + test_panel.py → code.py"
 else
-  for f in code.py clock.py wifi_setup.py tz.py brightness.py weather.py sun.py logo.py spotify.py; do
+  for f in code.py clock.py wifi_setup.py tz.py brightness.py weather.py sun.py logo.py spotify.py layouts.py; do
     src="$SRC_DIR/$f"
     if [[ ! -f "$src" ]]; then
       echo "  - $f missing in project, skipped"

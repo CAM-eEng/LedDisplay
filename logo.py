@@ -2,6 +2,12 @@
 from brightness import scale
 
 
+def _default_logo_path(width, height):
+    if max(width, height) >= 64:
+        return "/images/arc_raiders_logo/logo64.bmp"
+    return "/images/arc_raiders_logo/logo32.bmp"
+
+
 _state = {
     "group": None,
     "tile": None,
@@ -11,12 +17,17 @@ _state = {
 }
 
 
-def build(x, y, width, height, path="/images/arc_raiders_logo/logo32.bmp"):
+def build(x, y, width, height, path=None):
     """Load the logo BMP and return a positioned displayio.Group.
 
-    If the file is missing, returns an empty group (logo quadrant stays blank)
-    and prints a warning to serial.
+    If `path` is None, picks `logo32.bmp` or `logo64.bmp` based on the
+    largest of width/height.
+
+    If the file is missing, returns an empty group (logo quadrant stays
+    blank) and prints a warning to serial.
     """
+    if path is None:
+        path = _default_logo_path(width, height)
     import displayio
     import adafruit_imageload
     group = displayio.Group(x=x, y=y)
